@@ -1,49 +1,105 @@
-var 답 = "abcde";
-document.querySelector("button").addEventListener("click", function () {
-  var input = document.querySelectorAll(".input");
+const dictionary = [
+  "earth",
+  "plane",
+  "world",
+  "audio",
+  "mouse",
+  "house",
+  "river",
+  "phone",
+  "bread",
+  "happy",
+  "color",
+  "green",
+  "stuff",
+  "money",
+];
 
-  for (let i = 0; i < 답.length; i++) {
-    if (input[i].value == 답[i]) {
-      input[i].style.background = "lightgreen";
-      // 1. 위치까지 맞으면 - 초록
-    } else if (답.includes(input[i].value)) {
-      //includes는 string에 뭐 들었는지 확인.
-      input[i].style.background = "lightyellow";
-      // 2. 위치 아니면 - 노랑
-      // 비어있는 데 서밋하면 노랑이 됌...
-    } else {
-      input[i].style.background = "lightgrey";
-      // 3. 다 안 맞으면 - 회색
+const state = {
+  // data를 dom이랑 분리하고 싶대.. ?
+  secret: dictionary[Math.floor(Math.random() * dictionary.length)],
+  grid: Array(6)
+    .fill()
+    .map(() => Array(5).fill("")), //2d grid를 만듬. 6행 5열.. 문자 채우게
+  currentRow: 0, //처음 시작은 0이니까
+  currentCol: 0,
+};
+
+function updateGrid() {
+  //게임 상태에 맞춰서 ui를 업그레이드 하려는 것. 박스 만들 때  쓴 거 가지고 왔음.
+  for (let i = 0; i < state.grid.length; i++) {
+    for (let j = 0; j < state.grid[i].length; j++) {
+      const box = document.getElementById(`box${i}${j}`);
+      box.textContent = state.grid[i][j];
     }
-
-    input[i].classList.remove("input");
-
-    let template = `
-    <div>
-      <input class="input" maxlength="1" />
-      <input class="input" maxlength="1" />
-      <input class="input" maxlength="1" />
-      <input class="input" maxlength="1" />
-      <input class="input" maxlength="1" />
-    </div>`;
-    document.querySelector("body").insertAdjacentHTML("beforeend", template);
   }
-});
+}
 
-let inputs = document.querySelectorAll(".input");
-inputs.forEach(function (input, index) {
-  // 각 요소 별로 실행하려고, for of 대신 forEach
-  input.addEventListener("keypress", function (e) {
-    // key 누르면 event. e= event
-    if (e.key === "Enter") {
-      // enter key 확인
-      if (index < inputs.length - 1) {
-        // 배열의 마지막 요소가 아니라면
-        // 다음 입력 필드로 포커스 이동
-        inputs[index + 1].focus();
+function drawBox(container, row, col, letter = "") {
+  // 안에 4개 인수가 포함.
+  const box = document.createElement("div");
+  box.className = "box";
+  box.id = `box${row}${col}`;
+  box.textContent = letter; // 박스 안의 문자는 레터로
+
+  container.appendChild(box); //div 추가하고
+  return box; // box로 나오게
+}
+
+function drawGrid(container) {
+  //drawbox랑 왜 별개지?
+  const grid = document.createElement("div");
+  grid.className = "grid";
+
+  for (let i = 0; i < 6; i++) {
+    //행에서 0-6까지 이동 루프
+    for (let j = 0; j < 5; j++) {
+      // 열에서 0-5까지 이동}
+      drawBox(grid, i, j); //각 반복에 대해서 그리드를 그리고 싶음. 컨테이너 자체가 되고 행 i, 열은 j
+    }
+  }
+  container.appendChild(grid);
+}
+
+function registerKeyboardEvents() {
+  document.body.onkeydown = (e) => {}; //e = event
+  const key = e.key;
+  if (key === "Enter") {
+    if (state.currentCol === 5) {
+      // 넘어가기 전에 한 줄 다 채워 졌는지
+      const word = getCurrentWorld();
+      if (isWordValid(word)) {
+        revealWord(word);
+        state.currentRow++; //valid하니깐 다음 줄로 넘어가
+        state.currentCol = 0;
       } else {
-        // 배열의 마지막 요소일 경우, 새로운 입력 필드 처음으로 이동.. 지금 이게 안돼 지피티가 망치기 전에 일단 업로드 하자..
+        alert("Not a valid word.");
       }
     }
-  });
-});
+  }
+  if (key === "Backspace") {
+    removeLetter();
+  }
+  if (isLetter(key)) {
+    addLetter(key);
+  }
+}
+
+function getCurrentWorld() {
+  return state.grid[state.currentRow].reduce((prev, curr) => prev + curr);
+  //reduce가 콜백 펑션으로 이전꺼 현재꺼 더해서 가지고 옴.
+}
+
+function isWordValid(word) {
+  return dictionary.includes(word);
+}
+
+function startup() {
+  //처음에 하고 싶을 때 여기서 수행되게
+
+  const game = document.getElementById("game");
+  drawGrid(game);
+
+  registerKeyboardEvents();
+}
+startup();
