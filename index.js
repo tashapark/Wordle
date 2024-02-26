@@ -13,6 +13,7 @@ const dictionary = [
   "green",
   "stuff",
   "money",
+  "stamp",
 ];
 
 const state = {
@@ -63,7 +64,7 @@ function drawGrid(container) {
 
 function registerKeyboardEvents() {
   document.body.onkeydown = (e) => {}; //e = event
-  const key = e.key;
+  const key = e.key; //key.. error 어쩌냐... ㅡㅡ
   if (key === "Enter") {
     if (state.currentCol === 5) {
       // 넘어가기 전에 한 줄 다 채워 졌는지
@@ -94,6 +95,51 @@ function isWordValid(word) {
   return dictionary.includes(word);
 }
 
+function revealWord(guess) {
+  const row = state.currentRow; //올바른 행에 있는지 여부 표시
+  //현재 행을 다 가져오고 각 행에 대해 모든 문자 반복
+  for (let i = 0; i < 5; i++) {
+    const box = document.getElementById(`box${row}${i}`); //해당 문자와 관련된 상자
+    const letter = box.textContent; //문자 자체
+
+    if (letter === state.secret[i]) {
+      //맞으면
+      box.classList.add("right");
+    } else if (state.secret.includes(letter)) {
+      box.classList.add("wrong");
+    } else {
+      box.classList.add("empty");
+    }
+  }
+  const isWinner = state.secret === guess;
+  const isGameOver = state.currentRow === 5;
+
+  if (isWinner) {
+    alert("Congratulations!");
+  } else if (isGameOver) {
+    alert(`Better luck next time! The word was ${state.secret}.`);
+  }
+}
+
+function isLetter(key) {
+  //누른게 문자키인지 아닌 지 확인
+  return key.length === 1 && key.match(/[a-z]/i);
+  //길이가 1인지 확인 && 표현식과 일치하는 지 확인.
+}
+
+function addLetter(letter) {
+  //grid에 문자 추가하는 것
+  if (state.currentCol === 5) return; //공백있는지 확인하고 마지막 열에 있으면 반환, 아니면
+  state.grid[state.currentRow][state.currentCol] = letter; //현재 위치에 있는 문자 삭제
+  state.currentCol++; //열번호를 1씩 증가시킴.
+}
+
+function removeLetter() {
+  if (state.currentCol === 0) return;
+  state.grid[state.currentRow][state.currentCol - 1] = ""; //문자가 없으면 비워놓고,
+  state.currentCol--; //열번호 1개씩 감소.
+}
+
 function startup() {
   //처음에 하고 싶을 때 여기서 수행되게
 
@@ -101,5 +147,7 @@ function startup() {
   drawGrid(game);
 
   registerKeyboardEvents();
+
+  console.log(state.secret);
 }
 startup();
